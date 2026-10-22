@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0f14">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Marcador Tenis - Smartwatch Band 5</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=JetBrains+Mono:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon.png">
+</head>
+<body>
+  <div class="app-container" id="appContainer">
+    <!-- Header de estado y conexión -->
+    <header class="app-header">
+      <div class="header-left">
+        <span class="brand-badge">TENIS BAND 5</span>
+        <span class="status-indicator" id="connectionStatus" title="Estado de escucha">
+          <span class="pulse-dot"></span>
+          <span id="statusLabel">Listo para activar</span>
+        </span>
+      </div>
+      <div class="header-actions">
+        <button id="btnVoiceToggle" class="icon-btn" aria-label="Activar/Desactivar Voz" title="Voz en altavoz">
+          <span class="icon" id="voiceIcon">🔊</span>
+        </button>
+        <button id="btnSettings" class="icon-btn" aria-label="Ajustes" title="Reglas y configuración">
+          <span class="icon">⚙️</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Alerta de descanso / cambio de lado -->
+    <div id="breakBanner" class="break-banner hidden">
+      <div class="break-content">
+        <span class="break-icon">🔄</span>
+        <div class="break-text">
+          <strong>DESCANSO Y CAMBIO DE LADO</strong>
+          <span id="breakDetail">Revisa tu marcador antes de reanudar</span>
+        </div>
+      </div>
+      <button id="btnDismissBreak" class="btn-dismiss-break">Listo</button>
+    </div>
+
+    <!-- Tablero principal de Tenis (Optimizado para pantalla OLED de iPhone 13) -->
+    <main class="scoreboard">
+      <!-- Fila Jugador 1 (TÚ) -->
+      <section class="player-card user-player" id="cardP1">
+        <div class="player-meta">
+          <div class="name-serve">
+            <span class="serve-ball" id="serveP1" title="Al saque">🎾</span>
+            <input type="text" id="nameP1" value="TÚ (Band 5)" class="player-name-input" maxlength="14" spellcheck="false">
+          </div>
+          <span class="band-tag">1 toque Band = +1</span>
+        </div>
+
+        <div class="sets-tracker" id="setsP1">
+          <span class="set-score" id="p1Set1">-</span>
+          <span class="set-score" id="p1Set2">-</span>
+          <span class="set-score" id="p1Set3">-</span>
+        </div>
+
+        <div class="game-score-box">
+          <span class="label">JUEGOS</span>
+          <span class="games-value" id="gamesP1">0</span>
+        </div>
+
+        <div class="point-score-box">
+          <span class="points-value" id="pointsP1">0</span>
+          <div class="touch-overlay" id="touchAddP1" title="Tocar para sumar punto a Tú"></div>
+        </div>
+      </section>
+
+      <!-- Fila Jugador 2 (RIVAL) -->
+      <section class="player-card rival-player" id="cardP2">
+        <div class="player-meta">
+          <div class="name-serve">
+            <span class="serve-ball hidden" id="serveP2" title="Al saque">🎾</span>
+            <input type="text" id="nameP2" value="Rival" class="player-name-input" maxlength="14" spellcheck="false">
+          </div>
+          <span class="band-tag rival-tag">2 toques Band = +1</span>
+        </div>
+
+        <div class="sets-tracker" id="setsP2">
+          <span class="set-score" id="p2Set1">-</span>
+          <span class="set-score" id="p2Set2">-</span>
+          <span class="set-score" id="p2Set3">-</span>
+        </div>
+
+        <div class="game-score-box">
+          <span class="label">JUEGOS</span>
+          <span class="games-value" id="gamesP2">0</span>
+        </div>
+
+        <div class="point-score-box">
+          <span class="points-value" id="pointsP2">0</span>
+          <div class="touch-overlay" id="touchAddP2" title="Tocar para sumar punto al Rival"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Indicador de Tiebreak / Estado de Juego -->
+    <div class="match-info-strip" id="matchStatusStrip">
+      <span id="matchPhaseText">Set 1 - Juego normal</span>
+      <span id="servingStateText">Tú al servicio</span>
+    </div>
+
+    <!-- Panel de control de enlace con Band 5 -->
+    <section class="band-link-card" id="bandLinkCard">
+      <div class="band-status-wrap">
+        <div class="band-icon-wrap">
+          <span class="watch-icon">⌚</span>
+        </div>
+        <div class="band-info">
+          <div class="band-title">Control Remoto Band 5</div>
+          <div class="band-sub" id="bandHint">Abre "Música" en tu Band 5 y pulsa Iniciar</div>
+        </div>
+      </div>
+      <button id="btnActivateBand" class="btn-activate-band">
+        <span id="activateBtnIcon">▶</span>
+        <span id="activateBtnText">Vincular con Band 5</span>
+      </button>
+    </section>
+
+    <!-- Zona de Corrección Rápida durante el Descanso -->
+    <section class="correction-section">
+      <div class="section-title">
+        <span>CORRECCIÓN MANUAL EN DESCANSO</span>
+        <button id="btnUndo" class="btn-undo" title="Deshacer último punto registrado">
+          <span>↩</span> Deshacer último
+        </button>
+      </div>
+
+      <div class="quick-adjust-grid">
+        <div class="adjust-col">
+          <span class="adjust-header">TÚ</span>
+          <div class="btn-group">
+            <button id="btnP1PointMinus" class="adjust-btn minus" title="Restar punto">- Pts</button>
+            <button id="btnP1PointPlus" class="adjust-btn plus" title="Sumar punto">+ Pts</button>
+          </div>
+          <div class="btn-group">
+            <button id="btnP1GameMinus" class="adjust-btn minus" title="Restar juego">- Juego</button>
+            <button id="btnP1GamePlus" class="adjust-btn plus" title="Sumar juego">+ Juego</button>
+          </div>
+        </div>
+
+        <div class="adjust-divider">
+          <button id="btnSwapServe" class="btn-swap-serve" title="Cambiar quién tiene el saque">
+            ⇄ Saque
+          </button>
+          <button id="btnResetPoints" class="btn-reset-points" title="Reiniciar puntos del juego actual">
+            0-0 Pts
+          </button>
+        </div>
+
+        <div class="adjust-col">
+          <span class="adjust-header">RIVAL</span>
+          <div class="btn-group">
+            <button id="btnP2PointMinus" class="adjust-btn minus" title="Restar punto">- Pts</button>
+            <button id="btnP2PointPlus" class="adjust-btn plus" title="Sumar punto">+ Pts</button>
+          </div>
+          <div class="btn-group">
+            <button id="btnP2GameMinus" class="adjust-btn minus" title="Restar juego">- Juego</button>
+            <button id="btnP2GamePlus" class="adjust-btn plus" title="Sumar juego">+ Juego</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Historial reciente del partido -->
+    <section class="history-section">
+      <div class="history-header">
+        <span>HISTORIAL DE PUNTOS</span>
+        <span class="history-count" id="historyCount">0 puntos</span>
+      </div>
+      <div class="history-list" id="historyList">
+        <div class="empty-history">Inicia el partido para ver los puntos registrados</div>
+      </div>
+    </section>
+
+    <footer class="app-footer">
+      <button id="btnResetMatch" class="btn-danger-reset">Reiniciar Partido Completo</button>
+    </footer>
+  </div>
+
+  <!-- Modal de Configuración de Partido y Toques -->
+  <div class="modal-backdrop hidden" id="modalSettings">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h2>Configuración del Partido</h2>
+        <button id="btnCloseModal" class="btn-close">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="selectSets">Formato de Partido:</label>
+          <select id="selectSets" class="form-select">
+            <option value="1">1 Set Único (Pro Set)</option>
+            <option value="3" selected>Al mejor de 3 Sets</option>
+            <option value="5">Al mejor de 5 Sets</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="selectDeuceMode">Modalidad de Ventaja (Deuce):</label>
+          <select id="selectDeuceMode" class="form-select">
+            <option value="advantage" selected>Ventaja tradicional (Ventaja / Iguales)</option>
+            <option value="no-ad">Punto de Oro (No-Ad, a 40-40 punto decisivo)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="selectTiebreak">Desempate en 6-6:</label>
+          <select id="selectTiebreak" class="form-select">
+            <option value="standard" selected>Tiebreak a 7 puntos (diferencia de 2)</option>
+            <option value="super">Super Tiebreak a 10 puntos</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="tapSensitivity">Ventana detección de 2 toques Band 5 (ms):</label>
+          <div class="range-wrap">
+            <input type="range" id="tapSensitivity" min="400" max="1300" step="50" value="850">
+            <span id="tapSensitivityVal">850 ms</span>
+          </div>
+          <small class="help-text">Tiempo máximo permitido entre el primer y segundo toque para marcar punto perdido.</small>
+        </div>
+
+        <div class="info-guide">
+          <h3>¿Cómo funciona con tu Band 5?</h3>
+          <ol>
+            <li>En tu iPhone, pulsa <strong>"Vincular con Band 5"</strong>.</li>
+            <li>En tu Band 5, desliza hacia la pantalla de <strong>Música</strong>.</li>
+            <li><strong>1 toque en Play/Pause</strong> (o botón Siguiente ⏭️): <strong>Ganas punto</strong> (+1).</li>
+            <li><strong>2 toques en Play/Pause</strong> (o botón Anterior ⏮️): <strong>Pierdes punto</strong> (+1 rival).</li>
+            <li>En la pantalla de tu Band 5 verás el <strong>marcador en vivo</strong> en el título de la canción.</li>
+            <li>En cada descanso mira este iPhone y corrige al instante si hubo algún error.</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="btnSaveSettings" class="btn-primary-action">Guardar y Aplicar</button>
+      </div>
+    </div>
+  </div>
+
+  <audio id="audioLoop" src="silent.wav" preload="auto" loop playsinline webkit-playsinline></audio>
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js').catch(err => console.log('SW reg error:', err));
+      });
+    }
+  </script>
+</body>
+</html>
