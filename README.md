@@ -32,17 +32,23 @@ En cada descanso o cambio de lado:
 
 ## 🚀 Cómo ponerlo en marcha
 
-### Opción 1: En la cancha sin computadora (Recomendada)
-1. **Publicar gratis en la web (una sola vez desde la PC):**
-   - Arrastra la carpeta `tenis_marcador_band5` a [app.netlify.com/drop](https://app.netlify.com/drop) o súbela a GitHub Pages / Vercel.
-   - Obtendrás un enlace web público seguro (`https://...`).
-2. **Instalar en el iPhone 13:**
-   - Abre ese enlace en **Safari**.
-   - Toca el botón **Compartir** (icono con flecha hacia arriba) y selecciona **"Añadir a pantalla de inicio"**.
-3. **Uso en la cancha (100% autónomo y sin internet):**
-   - Gracias al Service Worker (`service-worker.js`), la app queda guardada en la memoria del iPhone.
-   - En la cancha, abres el icono de la app desde tu pantalla de inicio como una aplicación nativa. No necesitas computadora ni conexión a internet.
-   - Tocas **"Vincular con Band 5"**, abres **Música** en tu reloj y a jugar.
+### Opción 1: Publicar en GitHub Pages (Sin instalar Git, desde el navegador)
+1. **Crear el repositorio en GitHub**:
+   - Entra a [github.com](https://github.com) e inicia sesión.
+   - Pulsa el botón verde **"New"** para crear un nuevo repositorio.
+   - Asigna un nombre (ejemplo: `marcador-tenis`), déjalo en **Public** y pulsa **"Create repository"**.
+2. **Subir los archivos**:
+   - En la pantalla que aparece, haz clic en el enlace azul **"uploading an existing file"** (o en **"Add file"** > **"Upload files"**).
+   - Arrastra todos los archivos de la carpeta `tenis_marcador_band5` (`index.html`, `styles.css`, `app.js`, `silent.wav`, `manifest.json`, `service-worker.js`).
+   - Abajo pulsa el botón verde **"Commit changes"**.
+3. **Activar GitHub Pages**:
+   - En el menú superior de tu repositorio, ve a la pestaña **Settings** (Configuración).
+   - En el menú lateral izquierdo, haz clic en **Pages**.
+   - Bajo el apartado **"Build and deployment"** > **"Branch"**, cambia "None" por **`main`** (carpeta `/ (root)`).
+   - Pulsa **Save**.
+4. **Abrir en tu iPhone 13**:
+   - En 1 o 2 minutos, GitHub te mostrará en esa misma página el enlace público (ej: `https://tu-usuario.github.io/marcador-tenis/`).
+   - Abre ese enlace en Safari de tu iPhone, pulsa **Compartir** > **"Añadir a pantalla de inicio"** y ya lo tienes listo para la cancha.
 
 ---
 

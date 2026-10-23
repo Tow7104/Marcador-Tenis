@@ -171,11 +171,31 @@
     const serveWho = state.server === 1 ? `Saque: ${state.p1.name}` : `Saque: ${state.p2.name}`;
 
     try {
+      // Forzar estado activo para que iOS AVRCP transmita actualizaciones
+      navigator.mediaSession.playbackState = 'playing';
+
       navigator.mediaSession.metadata = new MediaMetadata({
         title: scoreTitle,
-        artist: setScore,
+        artist: `${setScore} • ${serveWho}`,
         album: serveWho
       });
+
+      // Actualizar posición de reproducción para simular cambio de pista en Bluetooth AVRCP
+      if ('setPositionState' in navigator.mediaSession) {
+        navigator.mediaSession.setPositionState({
+          duration: 300,
+          playbackRate: 1,
+          position: 0
+        });
+      }
+
+      // Reiniciar y asegurar reproducción continua para evitar suspensión en iOS
+      if (dom.audio) {
+        dom.audio.currentTime = 0;
+        if (dom.audio.paused) {
+          dom.audio.play().catch(() => {});
+        }
+      }
     } catch (e) {
       console.warn('MediaSession metadata error:', e);
     }
@@ -441,36 +461,68 @@
   function setupMediaSession() {
     if (!('mediaSession' in navigator)) return;
 
-    // Soporte 1: Detección inteligente por toques en Play/Pause
+    function keepAudioActive() {
+      if (dom.audio && dom.audio.paused) {
+        dom.audio.play().catch(() => {});
+      }
+      navigator.mediaSession.playbackState = 'playing';
+    }
+
+    // Soporte 1: Detección por botón Play/Pause
     navigator.mediaSession.setActionHandler('play', () => {
+      keepAudioActive();
       handleBandTapEvent();
     });
     navigator.mediaSession.setActionHandler('pause', () => {
+      keepAudioActive();
       handleBandTapEvent();
-      dom.audio.play().catch(() => {});
     });
+    try {
+      navigator.mediaSession.setActionHandler('stop', () => {
+        keepAudioActive();
+        handleBandTapEvent();
+      });
+    } catch (e) {}
 
-    // Soporte 2: Botones directos de pista en pantalla de música de Band 5
-    // Siguiente pista (>>|) = Gano punto
+    // Soporte 2: Botones de pista en pantalla de música de Band 5
+    // Siguiente pista (>>|) = Gano punto (+1 Tú)
     navigator.mediaSession.setActionHandler('nexttrack', () => {
+      keepAudioActive();
       scorePoint(1);
     });
-    // Pista anterior (|<<) = Pierdo punto
+    // Pista anterior (|<<) = Pierdo punto (+1 Rival)
     navigator.mediaSession.setActionHandler('previoustrack', () => {
+      keepAudioActive();
       scorePoint(2);
     });
+
+    // Soporte 3: Gestos de búsqueda soportados por algunos firmwares
+    try {
+      navigator.mediaSession.setActionHandler('seekforward', () => {
+        keepAudioActive();
+        scorePoint(1);
+      });
+      navigator.mediaSession.setActionHandler('seekbackward', () => {
+        keepAudioActive();
+        scorePoint(2);
+      });
+    } catch (e) {}
 
     updateBandScreen();
   }
 
   // Activar reproducción silenciosa y vincular MediaSession
   function activateBandLink() {
-    // 1. Desbloquear contexto de audio web en iOS
+    // 1. Desbloquear contexto de audio web en iOS de forma persistente
     try {
       const AudioContextClass = window.AudioContext || window.webkitAudioContext;
       if (AudioContextClass) {
-        const ctx = new AudioContextClass();
-        ctx.resume();
+        if (!window.tennisAudioContext) {
+          window.tennisAudioContext = new AudioContextClass();
+        }
+        if (window.tennisAudioContext.state === 'suspended') {
+          window.tennisAudioContext.resume();
+        }
       }
     } catch (e) {
       console.warn('AudioContext unlock:', e);
